@@ -1,0 +1,301 @@
+<?php
+/**
+ * @file
+ * This file contains the code for processing applicants fees online.
+ */
+
+
+/**
+ * Implementation of hook_perm().
+ * This are special permissions for applicants payment page.
+ */
+function application_payment_perm() {
+  return array(
+    'access applicants payment page',
+    'access settings applicantion payment',
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function application_payment_menu() {
+  // This is the minimum information you can provide for a menu item. This menu
+  // item will be created in the default menu.
+  $items['pay/application/%'] = array(
+    'title' => 'Applicant Payment',
+    'page callback' => 'application_payment_page',
+    'access arguments' => array('access applicants payment page'),
+    'page arguments' => array(2),
+  );
+  //create menu item for application payment setting
+   $items['admin/settings/fhchs/application_payments'] = array(
+    'title' => 'Application Payment Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('application_payment_settings'),
+    'access arguments' => array('access settings applicantion payment'),
+    );
+   
+   //create menu item to remove page
+   $items['admin/settings/fhchs/application_payments/remove'] = array(
+    'title' => 'Remove Application Payment Setting',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('application_payment_settings_remove'),
+    'access arguments' => array('access settings applicantion payment'),
+    'type' => MENU_CALLBACK,
+  );
+ 
+  return $items;
+}
+
+/**
+ * Description: Display a confirmation screen to delete application setting.
+ * @param reference &$form_state will pass a reference to the state of the
+ *        form.
+ * @param $type defualt to none if set it will have the value that will
+ *        be update.
+ * @return returns a confirmation form.
+ *  
+ */
+
+function application_payment_settings_remove(&$form_state, $type = NULL ) {
+  
+  //get settings
+  $settings = variable_get('application_payment_settings', array()); 
+  
+  //if type is not set redirect page to applicatin payment
+  if (is_null($type) || !(isset($settings[$type])) || $type == '' ) {
+     $form_state['redirect'] = 'admin/settings/fhchs/application_payments';
+  }
+      
+  //create confirmation form
+  $form['info'] = array('#type' => 'hidden', '#value' => $type);
+  $form['id'] = array('#type' => 'hidden', '#value' => $type);
+
+  //return confirmation form
+  return confirm_form($form, t('Are you sure you want to delete this application setting %type?', array('%type' => $type)), 'admin/settings/fhchs/application_payments', '', t('Delete'), t('Cancel'));
+
+}
+
+/**
+ * Description: Submit action to remove an applicatin setting.
+ * @param $form the form that was submitted.
+ * @param reference &$form_state will pass a reference to the state of the
+ *        form.
+ */
+function application_payment_settings_remove_submit($form, &$form_state) {
+ 
+ //get values from persistant varible in the Drupal varible TABLE
+  $settings = variable_get('application_payment_settings', array());
+
+  //get settings name
+  $name = $form_state['values']['id'];
+  
+  //unset value
+  unset($settings[ $form_state['values']['id']]);
+  
+  //save it
+  variable_set('application_payment_settings', $settings);
+  
+   //message to display in amin page
+  drupal_set_message(t('Setting ' . $form_state['values']['id'] . ' has been removed.'));
+   
+  //redirect to main form application settings form
+  $form_state['redirect'] = 'admin/settings/fhchs/application_payments';
+
+  return;
+}
+
+/**
+ * Description: This function will display the for to add and update values
+ *              for the payment settings.
+ * @param reference &$form_state will have the form information.
+ * @param $action default to none and if set will have the weather to
+ *          update an application setting.
+ * @param $type defualt to none if set it will have the value that will
+ *        be update.
+ * @return returns the form.
+ *  
+ */
+function application_payment_settings(&$form_state, $action = 'none', $type = 'none') {
+
+  
+    //get persistant varible from the varible table in the Drupal DB
+    $settings = variable_get('application_payment_settings', array()); 
+    
+    //create header for table
+    $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
+    
+    //create table rows
+    $rows = array();
+    foreach ($settings AS $index => $values) {
+       $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
+                             't-code' => $values['t_code'],
+                             'amount' => '$' . $values['amount'],
+                             'update' => l(t('Update'),
+                             'admin/settings/fhchs/application_payments/update/' . $index),
+                             'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+    }
+    //get table
+    $table = theme_table($header, $rows);
+    
+    //display table
+    $form['list'] = array(
+         '#type' =>  'markup',
+         '#value' => $table,
+        );
+    
+    //give the form a name
+    $form['#attributes'] = array('name' => 'application-paymnet-settings');
+  
+    //if action is set display a hidden field to flag the form as
+    //make sure that this setting exists
+    if (strtolower($action) == 'update' && isset($settings[$type]))
+      $form['update'] = array('#type' => 'hidden',
+                            '#value' => 'update',
+                            '#name' => 'update', );   
+   
+   //display the label and the text filed to hold name
+    $form['name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Name'),
+      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $type:'',
+      '#size' => 60,
+      '#maxlength' => 60,
+      '#required' => TRUE,
+      '#description' => t('Name of the the type of application, Example. Graduate'),
+    );
+     
+     //get options
+     $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM {tcodes} WHERE disabled = 0"));
+    
+     //display the label and the text field to hold t_code
+     $form['t_code'] = array(
+      '#type' => 'select',
+      '#title' => t('T-code'),
+      '#options' => $options,
+      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'',
+      '#required' => TRUE,
+      '#description' => t('Select the Transaction Code. Represents the account were funds are going to be save.'),
+    );
+     
+     //display the label and text field to hold amount
+     $form['amount'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Amount'),
+      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['amount']:'',
+      '#size' => 60,
+      '#maxlength' => 60,
+      '#required' => TRUE,
+      '#description' => t('The application cost in dollards, Example. 20.00'),
+    ); 
+    
+    //display submit button
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save Settings'),
+     );
+    //return form
+    return $form;
+}
+
+/**
+ * Description: This function will validate values comming from the form.
+ * @param string $form this will have the type passed from the URL that
+ *               determine the amount that needs to be pay.
+ * @param reference &$form_state will have the form information.                           
+ */
+function application_payment_settings_validate($form, &$form_state) {
+  
+  //get persistant varible from the varible table in the Drupal DB
+  $settings = variable_get('application_payment_settings', array());
+  
+  //change case to lower case, not case sesative
+  $form_state['values']['name'] = strtolower($form_state['values']['name']);
+  
+  //make sure that the amount field is numeric
+  if (!is_numeric($form_state['values']['amount']))
+    form_set_error('application-paymnet-settings', t('Please enter a valid number.'));
+  
+  //check if this new value already exist and it make sure is not an update.
+  if ((isset($settings[$form_state['values']['name']])) && !(isset($form_state['values']['update']))) {
+    //message to display in amin page
+    form_set_error('application-paymnet-settings', t('This name already exist. Please try a different name.'));
+   
+  }
+  
+}
+/**
+ * Description: This function submits values to the varible table in the drupal
+ *              database.
+ * @param string $form this will have the type passed from the URL that
+ *               determine the amount that needs to be pay.
+ * @param reference &$form_state will have the form information.                           
+ */
+
+function application_payment_settings_submit($form, &$form_state) {
+  
+  //get persistant varible from the varible table in the Drupal DB
+  $settings = variable_get('application_payment_settings', array());
+  //add new value to the settings varible
+  $settings[$form_state['values']['name']] = array('t_code' => $form_state['values']['t_code'], 'amount' => number_format((float)$form_state['values']['amount'], 2));
+ //save values in drupal
+  variable_set('application_payment_settings', $settings);
+  //message to display in amin page
+  drupal_set_message(t('Setting Saved'));
+  
+  if (isset($form_state['values']['update']))
+       $form_state['redirect'] = 'admin/settings/fhchs/application_payments';
+    
+}
+/**
+ * Description: This function sends user to a payment page if they need to make
+ *              else it will display a messege that a payment is not arquiered.
+ * @param string $payment_type this will have the type passed from the URL that
+ *               determine the amount that needs to be pay.
+ *
+ * @return string content to be display in the screen.             
+ */
+function application_payment_page($payment_type)  {
+  
+  //Get current drupal user
+  global $user;
+
+  //get the application feed settings
+  $settings = variable_get('application_payment_settings', array());
+  
+  //convert the input to lower case, the url should not be case sensative
+  $payment_type = strtolower($payment_type);
+  
+  //sanatizing before using in the array
+  $payment_type = filter_xss($payment_type);
+  /*
+  if (!isset($settings[$payment_type]) || $payment_type == 'undergraduate'){
+    drupal_access_denied();
+    return;  // We actually don't get here.
+  }
+  */
+  //check if payment is due
+ $if_payment_due = sonisweb_integration_sql("SELECT count(*) AS nopaidapp FROM {nmappchk} AS nm INNER JOIN {appchk} AS app ON app.appchk_cod = nm.appchk_cod
+    WHERE nm.chk_comp = 0 AND app.disabled = 0 AND app.appchk_txt LIKE '%app%fee%' AND nm.soc_sec =  '" . $user->name . "'");
+ 
+ 
+  if ($if_payment_due[0]['NOPAIDAPP'] > 0) {
+   //create form for payment
+   $display = sonisweb_integration_api('CFC.sallie_mae', 'sso', 'yes', array(array('sonis_ds', '#sonis.ds#'),
+                                                     array('account', $user->name),
+                                                     array('pmt_type', $settings[$payment_type]['t_code']),
+                                                     array('pmt_type_desc', "Payment of application fee, done online."),
+                                                     array('amount_paid', $settings[$payment_type]['amount']),
+                                                     array('submit', 'Make Payment'),
+                                                     ));
+    //adding javascript to submit form automatically to send them to payment form   
+    $display .= '<script type="text/javascript">document.sso.submit();</script>';
+                                                     
+    return $display;
+ }
+ else {
+  
+  return '<p>'. t('It appears you have already paid your application fee, if you have any question please contact your enrollment advisor.') .'<p>';
+ }
+}

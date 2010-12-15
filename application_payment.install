@@ -1,0 +1,20 @@
+<?php
+// $Id: application_payment.install,v 1.0.0.0 2010/12/15 20:00:28 arod Exp $
+/**
+ * @file
+ * This file contains the code for processing applicants fees online.
+ */
+
+/**
+* Implementation of hook_uninstall().
+*/
+function application_payment_uninstall() {
+ // Get rid of the module variables.
+  variable_del('application_payment_settings');
+}
+
+
+
+
+
+

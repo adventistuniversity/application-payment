@@ -1,0 +1,8 @@
+
+name = Application Payment
+description = Allow applicants to pay there fees online.
+package = Florida Hospital College Modules
+dependencies[] = sonisweb_integration
+core = 6.x
+
+
