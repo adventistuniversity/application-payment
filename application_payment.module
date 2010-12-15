@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /**
  * @file
  * This file contains the code for processing applicants fees online.
@@ -12,7 +13,7 @@
 function application_payment_perm() {
   return array(
     'access applicants payment page',
-    'access settings applicantion payment',
+    'access settings application payment',
   );
 }
 
@@ -63,7 +64,7 @@ function application_payment_settings_remove(&$form_state, $type = NULL ) {
   //get settings
   $settings = variable_get('application_payment_settings', array()); 
   
-  //if type is not set redirect page to applicatin payment
+  //if type is not set redirect page to application payment
   if (is_null($type) || !(isset($settings[$type])) || $type == '' ) {
      $form_state['redirect'] = 'admin/settings/fhchs/application_payments';
   }
@@ -78,28 +79,28 @@ function application_payment_settings_remove(&$form_state, $type = NULL ) {
 }
 
 /**
- * Description: Submit action to remove an applicatin setting.
+ * Description: Submit action to remove an application setting.
  * @param $form the form that was submitted.
  * @param reference &$form_state will pass a reference to the state of the
  *        form.
  */
 function application_payment_settings_remove_submit($form, &$form_state) {
  
- //get values from persistant varible in the Drupal varible TABLE
+  //get values from persistent variable in the Drupal variable TABLE
   $settings = variable_get('application_payment_settings', array());
 
   //get settings name
   $name = $form_state['values']['id'];
   
   //unset value
-  unset($settings[ $form_state['values']['id']]);
+  unset($settings[$form_state['values']['id']]);
   
   //save it
   variable_set('application_payment_settings', $settings);
   
-   //message to display in amin page
+  //message to display in amin page
   drupal_set_message(t('Setting ' . $form_state['values']['id'] . ' has been removed.'));
-   
+
   //redirect to main form application settings form
   $form_state['redirect'] = 'admin/settings/fhchs/application_payments';
 
@@ -110,123 +111,125 @@ function application_payment_settings_remove_submit($form, &$form_state) {
  * Description: This function will display the for to add and update values
  *              for the payment settings.
  * @param reference &$form_state will have the form information.
- * @param $action default to none and if set will have the weather to
+ * @param $action default to none and if set will have the whether to
  *          update an application setting.
- * @param $type defualt to none if set it will have the value that will
- *        be update.
+ * @param $type default to none if set it will have the value that will
+ *        be updated.
  * @return returns the form.
  *  
  */
 function application_payment_settings(&$form_state, $action = 'none', $type = 'none') {
 
+  $type = filter_xss($type);
+  $action = filter_xss($action);
+
+  //get persistent variable from the variable table in the Drupal DB
+  $settings = variable_get('application_payment_settings', array()); 
   
-    //get persistant varible from the varible table in the Drupal DB
-    $settings = variable_get('application_payment_settings', array()); 
-    
-    //create header for table
-    $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
-    
-    //create table rows
-    $rows = array();
-    foreach ($settings AS $index => $values) {
-       $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
-                             't-code' => $values['t_code'],
-                             'amount' => '$' . $values['amount'],
-                             'update' => l(t('Update'),
-                             'admin/settings/fhchs/application_payments/update/' . $index),
-                             'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
-    }
-    //get table
-    $table = theme_table($header, $rows);
-    
-    //display table
-    $form['list'] = array(
-         '#type' =>  'markup',
-         '#value' => $table,
-        );
-    
-    //give the form a name
-    $form['#attributes'] = array('name' => 'application-paymnet-settings');
+  //create header for table
+  $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
   
-    //if action is set display a hidden field to flag the form as
-    //make sure that this setting exists
-    if (strtolower($action) == 'update' && isset($settings[$type]))
-      $form['update'] = array('#type' => 'hidden',
+  //create table rows
+  $rows = array();
+  foreach ($settings AS $index => $values) {
+   $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
+                         't-code' => $values['t_code'],
+                         'amount' => '$' . $values['amount'],
+                         'update' => l(t('Update'),
+                         'admin/settings/fhchs/application_payments/update/' . $index),
+                         'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+  }
+  //get table
+  $table = theme_table($header, $rows);
+  
+  //display table
+  $form['list'] = array(
+       '#type' =>  'markup',
+       '#value' => $table,
+  );
+  
+  //give the form a name
+  $form['#attributes'] = array('name' => 'application-payment-settings');
+
+  //if action is set display a hidden field to flag the form as
+  //make sure that this setting exists
+  if (strtolower($action) == 'update' && isset($settings[$type]))
+    $form['update'] = array('#type' => 'hidden',
                             '#value' => 'update',
-                            '#name' => 'update', );   
+                            '#name' => 'update', );
+ 
+ //display the label and the text filed to hold name
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $type:'',
+    '#size' => 60,
+    '#maxlength' => 60,
+    '#required' => TRUE,
+    '#description' => t('Name of the the type of application, Example: graduate'),
+  );
    
-   //display the label and the text filed to hold name
-    $form['name'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Name'),
-      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $type:'',
-      '#size' => 60,
-      '#maxlength' => 60,
-      '#required' => TRUE,
-      '#description' => t('Name of the the type of application, Example. Graduate'),
-    );
-     
-     //get options
-     $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0"));
-    
-     //display the label and the text field to hold t_code
-     $form['t_code'] = array(
-      '#type' => 'select',
-      '#title' => t('T-code'),
-      '#options' => $options,
-      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'',
-      '#required' => TRUE,
-      '#description' => t('Select the Transaction Code. Represents the account were funds are going to be save.'),
-    );
-     
-     //display the label and text field to hold amount
-     $form['amount'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Amount'),
-      '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['amount']:'',
-      '#size' => 60,
-      '#maxlength' => 60,
-      '#required' => TRUE,
-      '#description' => t('The application cost in dollards, Example. 20.00'),
-    ); 
-    
-    //display submit button
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save Settings'),
-     );
-    //return form
-    return $form;
+   //get options
+   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0"));
+  
+   //display the label and the text field to hold t_code
+   $form['t_code'] = array(
+    '#type' => 'select',
+    '#title' => t('T-code'),
+    '#options' => $options,
+    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'',
+    '#required' => TRUE,
+    '#description' => t('Select the Transaction Code. Represents the account were funds are going to be saved.'),
+  );
+   
+   //display the label and text field to hold amount
+   $form['amount'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amount'),
+    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['amount']:'',
+    '#size' => 60,
+    '#maxlength' => 60,
+    '#required' => TRUE,
+    '#description' => t('The application cost in dollars, Example: 20.00'),
+  ); 
+  
+  //display submit button
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save Settings'),
+   );
+  //return form
+  return $form;
 }
 
 /**
- * Description: This function will validate values comming from the form.
+ * Description: This function will validate values coming from the form.
  * @param string $form this will have the type passed from the URL that
  *               determine the amount that needs to be pay.
- * @param reference &$form_state will have the form information.                           
+ * @param reference &$form_state will have the form information.
  */
 function application_payment_settings_validate($form, &$form_state) {
   
-  //get persistant varible from the varible table in the Drupal DB
+  //get persistent variable from the variable table in the Drupal DB
   $settings = variable_get('application_payment_settings', array());
   
-  //change case to lower case, not case sesative
-  $form_state['values']['name'] = strtolower($form_state['values']['name']);
+  //change case to lower case, not case sensitive
+  $form_state['values']['name'] = filter_xss(strtolower($form_state['values']['name']));
   
   //make sure that the amount field is numeric
   if (!is_numeric($form_state['values']['amount']))
-    form_set_error('application-paymnet-settings', t('Please enter a valid number.'));
+    form_set_error('application-payment-settings', t('Please enter a valid number.'));
   
   //check if this new value already exist and it make sure is not an update.
   if ((isset($settings[$form_state['values']['name']])) && !(isset($form_state['values']['update']))) {
     //message to display in amin page
-    form_set_error('application-paymnet-settings', t('This name already exist. Please try a different name.'));
+    form_set_error('application-payment-settings', t('This name already exist. Please try a different name.'));
    
   }
   
 }
 /**
- * Description: This function submits values to the varible table in the drupal
+ * Description: This function submits values to the variable table in the drupal
  *              database.
  * @param string $form this will have the type passed from the URL that
  *               determine the amount that needs to be pay.
@@ -235,9 +238,9 @@ function application_payment_settings_validate($form, &$form_state) {
 
 function application_payment_settings_submit($form, &$form_state) {
   
-  //get persistant varible from the varible table in the Drupal DB
+  //get persistent variable from the variable table in the Drupal DB
   $settings = variable_get('application_payment_settings', array());
-  //add new value to the settings varible
+  //add new value to the settings variable
   $settings[$form_state['values']['name']] = array('t_code' => $form_state['values']['t_code'], 'amount' => number_format((float)$form_state['values']['amount'], 2));
  //save values in drupal
   variable_set('application_payment_settings', $settings);
@@ -250,7 +253,7 @@ function application_payment_settings_submit($form, &$form_state) {
 }
 /**
  * Description: This function sends user to a payment page if they need to make
- *              else it will display a messege that a payment is not arquiered.
+ *              else it will display a message that a payment is not required.
  * @param string $payment_type this will have the type passed from the URL that
  *               determine the amount that needs to be pay.
  *
@@ -264,7 +267,7 @@ function application_payment_page($payment_type)  {
   //get the application feed settings
   $settings = variable_get('application_payment_settings', array());
   
-  //convert the input to lower case, the url should not be case sensative
+  //convert the input to lower case, the url should not be case sensitive
   $payment_type = strtolower($payment_type);
   
   //sanatizing before using in the array
