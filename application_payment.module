@@ -167,7 +167,7 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
     );
      
      //get options
-     $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM {tcodes} WHERE disabled = 0"));
+     $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0"));
     
      //display the label and the text field to hold t_code
      $form['t_code'] = array(
@@ -276,7 +276,7 @@ function application_payment_page($payment_type)  {
   }
   */
   //check if payment is due
- $if_payment_due = sonisweb_integration_sql("SELECT count(*) AS nopaidapp FROM {nmappchk} AS nm INNER JOIN {appchk} AS app ON app.appchk_cod = nm.appchk_cod
+ $if_payment_due = sonisweb_integration_sql("SELECT count(*) AS nopaidapp FROM nmappchk AS nm INNER JOIN appchk AS app ON app.appchk_cod = nm.appchk_cod
     WHERE nm.chk_comp = 0 AND app.disabled = 0 AND app.appchk_txt LIKE '%app%fee%' AND nm.soc_sec =  '" . $user->name . "'");
  
  
