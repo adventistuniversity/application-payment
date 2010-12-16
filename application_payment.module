@@ -172,7 +172,7 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   );
    
    //get options
-   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0 ORDER BY tcodes ASC"));
+   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, tcodes +' - '+ rtrim(descript)  FROM tcodes WHERE disabled = 0 ORDER BY tcodes ASC"));
   
    //display the label and the text field to hold t_code
    $form['t_code'] = array(
