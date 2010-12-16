@@ -123,31 +123,33 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   $type = filter_xss($type);
   $action = filter_xss($action);
 
-  //get persistent variable from the variable table in the Drupal DB
-  $settings = variable_get('application_payment_settings', array()); 
-  
-  //create header for table
-  $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
-  
-  //create table rows
-  $rows = array();
-  foreach ($settings AS $index => $values) {
-   $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
-                         't-code' => $values['t_code'],
-                         'amount' => '$' . $values['amount'],
-                         'update' => l(t('Update'),
-                         'admin/settings/fhchs/application_payments/update/' . $index),
-                         'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+   //if setting is empty do not display table or header
+  if (!empty($settings)){
+    //get persistent variable from the variable table in the Drupal DB
+    $settings = variable_get('application_payment_settings', array()); 
+    
+    //create header for table
+    $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
+    
+    //create table rows
+    $rows = array();
+    foreach ($settings AS $index => $values) {
+     $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
+                           't-code' => $values['t_code'],
+                           'amount' => '$' . $values['amount'],
+                           'update' => l(t('Update'),
+                           'admin/settings/fhchs/application_payments/update/' . $index),
+                           'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+    }
+    //get table
+    $table = theme_table($header, $rows);
+    
+    //display table
+    $form['list'] = array(
+         '#type' =>  'markup',
+         '#value' => $table,
+    );
   }
-  //get table
-  $table = theme_table($header, $rows);
-  
-  //display table
-  $form['list'] = array(
-       '#type' =>  'markup',
-       '#value' => $table,
-  );
-  
   //give the form a name
   $form['#attributes'] = array('name' => 'application-payment-settings');
 
