@@ -34,7 +34,7 @@ function application_payment_menu() {
     'title' => 'Application Payment Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('application_payment_settings'),
-    'access arguments' => array('access settings applicantion payment'),
+    'access arguments' => array('access settings application payment'),
     );
    
    //create menu item to remove page
@@ -42,7 +42,7 @@ function application_payment_menu() {
     'title' => 'Remove Application Payment Setting',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('application_payment_settings_remove'),
-    'access arguments' => array('access settings applicantion payment'),
+    'access arguments' => array('access settings application payment'),
     'type' => MENU_CALLBACK,
   );
  
@@ -123,11 +123,11 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   $type = filter_xss($type);
   $action = filter_xss($action);
 
-   //if setting is empty do not display table or header
+  //get persistent variable from the variable table in the Drupal DB
+  $settings = variable_get('application_payment_settings', array()); 
+  
+  //if setting is empty do not display table or header
   if (!empty($settings)){
-    //get persistent variable from the variable table in the Drupal DB
-    $settings = variable_get('application_payment_settings', array()); 
-    
     //create header for table
     $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
     
@@ -172,14 +172,14 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   );
    
    //get options
-   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0"));
+   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0 ORDER BY tcodes ASC"));
   
    //display the label and the text field to hold t_code
    $form['t_code'] = array(
     '#type' => 'select',
     '#title' => t('T-code'),
     '#options' => $options,
-    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'',
+    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'AP',
     '#required' => TRUE,
     '#description' => t('Select the Transaction Code. Represents the account were funds are going to be saved.'),
   );

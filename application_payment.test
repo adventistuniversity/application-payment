@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: page_example.test,v 1.1.2.3 2010/09/03 17:08:33 rfay Exp $
 
 /**
  * @file
@@ -26,19 +26,19 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp('sonisweb_integration', 'application_payment');
     
-    //creating credentials for settings
-    //get persistent variable from the variable table in the Drupal DB
-    $settings = variable_get('application_payment_settings', array());
-    //add new value to the settings variable
-    $settings = array( 'undergraduate' => array('t_code' => 'test_tcode', 'amount' => 20.00));
-    //save values in drupal
-    variable_set('application_payment_settings', $settings);
+   //creating credentials for settings 
+   //get persistant varible from the varible table in the Drupal DB
+   $settings = variable_get('application_payment_settings', array());
+   //add new value to the settings varible
+   $settings = array( 'undergraduate' => array('t_code' => 'test_tcode', 'amount' => 20.00));
+   //save values in drupal
+   variable_set('application_payment_settings', $settings);
    
-    //setting sonisweb API password
-    variable_set('sonisweb_integration_admin_user', 'apiadmin');
-    variable_set('sonisweb_integration_admin_password', 'apiadm');
-    variable_set('sonisweb_integration_caching_length', '0');
-    variable_set('sonisweb_integration_soap_base_url', 'http://fhcdv-mars.fhchs.edu/sonisweb200/CustomPages/');
+   //setting sonisweb API password
+   variable_set('sonisweb_integration_admin_user', 'apiadmin');
+   variable_set('sonisweb_integration_admin_password', 'apiadm');
+   variable_set('sonisweb_integration_caching_length', '0');
+   variable_set('sonisweb_integration_soap_base_url', 'http://fhcdv-mars.fhchs.edu/sonisweb200/CustomPages/');
   }
 
 
@@ -60,7 +60,7 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
    */
   //test admin page
   function testApplicationPaymentSettings() {
-    //create settings
+   //create settings
   
     //Test Case 1.2 application_payment.xlsx Application Payment Settings tab
     
@@ -76,7 +76,7 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
     // page_example module
     $this->pageExampleVerifyNoAccess('admin/settings/fhchs/application_payments');
 
-    //Test Case 1.1 application_payment.xlsx Application Payment Settings tab
+   //Test Case 1.1 application_payment.xlsx Application Payment Settings tab
    
     // Create a user with permissions to access 'application setting payment' page and login.
     $this->web_user = $this->drupalCreateUser(array('access settings application payment'));
@@ -84,32 +84,31 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
 
     // Verify that user can access content
     $this->drupalGet('admin/settings/fhchs/application_payments');
-    $this->assertResponse(200, t('Payment settings page successfully accessed.'));
+    $this->assertResponse(200, t('Payment settings page fail accessed.'));
     
-    //Test Case 2.1 application_payment.xlsx Application payment Settings tab
+    //Test Case 2.1 application_payment.xlsx Application Paymnet Settings tab
     $this->drupalPost('admin/settings/fhchs/application_payments', array('name' => t('test_name'), 't_code' => t('LA'), 'amount' => t('20.00')) , t('Save Settings'));
     $settings = variable_get('application_payment_settings', array());
-    $this->assertTrue(isset($settings['test_name']), 'New application setting has been created');
+    $this->assertTrue(isset($settings['test_name']), 'New application setting has not been created');
     
     //Test Case 2.2 application_payment.xlsx Application Payment Settings tab
-    $this->assertTrue(($settings['test_name']['amount'] == '20.00'), 'Amount is equal to the same amount that the setting was created.');
-    $this->drupalPost('admin/settings/fhchs/application_payments/update/test_name', array('name' => t('test_name'), 't_code' => t('LA'), 'amount' => t('30.00'), 'update' => t('update')), t('Save Settings'));
+    $this->assertTrue(($settings['test_name']['amount'] == '20.00'), 'Amount is not equal to the same amount that the setting was created.');
+    $this->drupalPost('admin/settings/fhchs/application_payments/update/test_name', array('name' => t('test_name'), 't_code' => t('LA'), 'amount'=>t('30.00'), 'update'=>t('update')), t('Save Settings'));
     //get the settings and check if the update has changed
     $settings = variable_get('application_payment_settings', array());
-    $this->assertTrue(($settings['test_name']['amount'] == '30.00'), 'Amount has been updated to $30.00.');
+    $this->assertTrue(($settings['test_name']['amount'] == '30.00'), 'Amount has not been updated to $30.00.');
     
     //Test Case 2.3 application_payment.xlsx Application Payment Settings tab
     $settings = variable_get('application_payment_settings', array());
-    $this->assertTrue(isset($settings['test_name']), 'A setting test_name is in the settings');
+    $this->assertTrue(isset($settings['test_name']), 'A setting test_name is not in the settings');
     $this->drupalPost('admin/settings/fhchs/application_payments/remove/test_name', NULL, t('Delete'));
     $settings = variable_get('application_payment_settings', array());
-    $this->assertFalse(isset($settings['test_name']), 'A settings test_name is no longer in the settings');
-    
+    $this->assertFalse(isset($settings['test_name']), 'A settings test_name is in the settings');
     
   }
   
   //front end page
-  function testApplicationPayment() {
+   function testApplicationPayment() {
     
    //Test Case 1.1 application_payment.xlsx Application Payment tab
    
@@ -132,8 +131,12 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
 
    // Verify that user can access foo content
    $this->drupalGet('pay/application/undergraduate');
-   $this->assertResponse(200, t('Simple page content successfully accessed.'));
+   $this->assertResponse(200, t('Application payment page content fail accessed.'));
+   
+   //Test Case 1.3 application_payment.xlsx Application Payment tab
    
    
+   
+
   }
 }
