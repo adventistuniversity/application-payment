@@ -101,7 +101,7 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
     //Test Case 2.3 application_payment.xlsx Application Payment Settings tab
     $settings = variable_get('application_payment_settings', array());
     $this->assertTrue(isset($settings['test_name']), 'A setting test_name is not in the settings');
-    $this->drupalPost('admin/settings/fhchs/application_payments/remove/test_name', NULL, t('Delete'));
+    $this->drupalPost('admin/settings/fhchs/application_payments/remove/test_name', NULL, t('Remove'));
     $settings = variable_get('application_payment_settings', array());
     $this->assertFalse(isset($settings['test_name']), 'A settings test_name is in the settings');
     
@@ -116,7 +116,7 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
    // appliation_payment module
    $this->pageExampleVerifyNoAccess('pay/application/undergraduate');
     
-   // Create a regular user and login.
+   // Create a regular user and login
    $this->web_user = $this->drupalCreateUser();
    $this->drupalLogin($this->web_user);
 
