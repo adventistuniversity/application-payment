@@ -156,19 +156,27 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   //if action is set display a hidden field to flag the form as
   //make sure that this setting exists
   if (strtolower($action) == 'update' && isset($settings[$type]))
+  {
     $form['update'] = array('#type' => 'hidden',
                             '#value' => 'update',
                             '#name' => 'update', );
- 
+
+    $form['update_name'] = array('#type' => 'markup',
+                                 '#value' => t('<br /><strong>Name: </strong><br />' . $type),
+                                );
+  }
+  
+  
  //display the label and the text filed to hold name
   $form['name'] = array(
-    '#type' => 'textfield',
+    '#type' => strtolower($action) == 'update' && isset($settings[$type])?'hidden':'textfield',
     '#title' => t('Name'),
     '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $type:'',
     '#size' => 60,
     '#maxlength' => 60,
     '#required' => TRUE,
     '#description' => t('Name of the the type of application, Example: graduate'),
+    '#disabled' => (strtolower($action) == 'update' &&  isset($settings[$type]))? TRUE:FALSE,
   );
    
    //get options
