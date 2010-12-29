@@ -34,7 +34,7 @@ function application_payment_menu() {
     'title' => 'Application Payment Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('application_payment_settings'),
-    'access arguments' => array('access settings applicantion payment'),
+    'access arguments' => array('access settings application payment'),
     );
    
    //create menu item to remove page
@@ -42,7 +42,7 @@ function application_payment_menu() {
     'title' => 'Remove Application Payment Setting',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('application_payment_settings_remove'),
-    'access arguments' => array('access settings applicantion payment'),
+    'access arguments' => array('access settings application payment'),
     'type' => MENU_CALLBACK,
   );
  
@@ -74,7 +74,7 @@ function application_payment_settings_remove(&$form_state, $type = NULL ) {
   $form['id'] = array('#type' => 'hidden', '#value' => $type);
 
   //return confirmation form
-  return confirm_form($form, t('Are you sure you want to delete this application setting %type?', array('%type' => $type)), 'admin/settings/fhchs/application_payments', '', t('Delete'), t('Cancel'));
+  return confirm_form($form, t('Are you sure you want to delete this application setting %type?', array('%type' => $type)), 'admin/settings/fhchs/application_payments', '', t('Remove'), t('Cancel'));
 
 }
 
@@ -126,58 +126,68 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
   //get persistent variable from the variable table in the Drupal DB
   $settings = variable_get('application_payment_settings', array()); 
   
-  //create header for table
-  $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
-  
-  //create table rows
-  $rows = array();
-  foreach ($settings AS $index => $values) {
-   $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
-                         't-code' => $values['t_code'],
-                         'amount' => '$' . $values['amount'],
-                         'update' => l(t('Update'),
-                         'admin/settings/fhchs/application_payments/update/' . $index),
-                         'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+  //if setting is empty do not display table or header
+  if (!empty($settings)){
+    //create header for table
+    $header = array(t('Name'), t('T-Code'), t('Amount'), t('Update'), t('Remove'));
+    
+    //create table rows
+    $rows = array();
+    foreach ($settings AS $index => $values) {
+     $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
+                           't-code' => $values['t_code'],
+                           'amount' => '$' . $values['amount'],
+                           'update' => l(t('Update'),
+                           'admin/settings/fhchs/application_payments/update/' . $index),
+                           'remove' => l(t('Remove'), 'admin/settings/fhchs/application_payments/remove/' . $index), );
+    }
+    //get table
+    $table = theme_table($header, $rows);
+    
+    //display table
+    $form['list'] = array(
+         '#type' =>  'markup',
+         '#value' => $table,
+    );
   }
-  //get table
-  $table = theme_table($header, $rows);
-  
-  //display table
-  $form['list'] = array(
-       '#type' =>  'markup',
-       '#value' => $table,
-  );
-  
   //give the form a name
   $form['#attributes'] = array('name' => 'application-payment-settings');
 
   //if action is set display a hidden field to flag the form as
   //make sure that this setting exists
   if (strtolower($action) == 'update' && isset($settings[$type]))
+  {
     $form['update'] = array('#type' => 'hidden',
                             '#value' => 'update',
                             '#name' => 'update', );
- 
+
+    $form['update_name'] = array('#type' => 'markup',
+                                 '#value' => t('<br /><strong>Name: </strong><br />' . $type),
+                                );
+  }
+  
+  
  //display the label and the text filed to hold name
   $form['name'] = array(
-    '#type' => 'textfield',
+    '#type' => strtolower($action) == 'update' && isset($settings[$type])?'hidden':'textfield',
     '#title' => t('Name'),
     '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $type:'',
     '#size' => 60,
     '#maxlength' => 60,
     '#required' => TRUE,
     '#description' => t('Name of the the type of application, Example: graduate'),
+    '#disabled' => (strtolower($action) == 'update' &&  isset($settings[$type]))? TRUE:FALSE,
   );
    
    //get options
-   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, rtrim(descript) + ' (' +tcodes+')' FROM tcodes WHERE disabled = 0"));
+   $options = sonisweb_integration_sql_to_options(sonisweb_integration_sql("SELECT tcodes, tcodes +' - '+ rtrim(descript)  FROM tcodes WHERE disabled = 0 ORDER BY tcodes ASC"));
   
    //display the label and the text field to hold t_code
    $form['t_code'] = array(
     '#type' => 'select',
     '#title' => t('T-code'),
     '#options' => $options,
-    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'',
+    '#default_value' => (strtolower($action) == 'update' &&  isset($settings[$type]))? $settings[$type]['t_code']:'AP',
     '#required' => TRUE,
     '#description' => t('Select the Transaction Code. Represents the account were funds are going to be saved.'),
   );
