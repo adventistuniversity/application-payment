@@ -321,25 +321,47 @@ function application_payment_page($payment_type)  {
  }
 }
 
+/**
+ * Description: This function display a list of application payment types.
+ *
+ * @return string content to be display in the screen.
+ * 
+ */
 
 function application_payment_options_page() {
   
+  //Get current user login
+  global $user;
 
-  //get persistent variable from the variable table in the Drupal DB
+  //Get persistent variable from the variable table in the Drupal DB
   $settings = variable_get('application_payment_settings', array()); 
   
-  $links = '<ul>';
-  
-  //Create links
-  if (!empty($settings)){
-    foreach ($settings AS $index => $values) {
-     //Create links
-      $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/ ' . $index) . '</li>';
+   //check if payment is due
+  $if_payment_due = sonisweb_integration_sql("SELECT count(*) AS nopaidapp FROM nmappchk AS nm INNER JOIN appchk AS app ON app.appchk_cod = nm.appchk_cod
+    WHERE nm.chk_comp = 0 AND app.disabled = 0 AND app.appchk_txt LIKE '%app%fee%' AND nm.soc_sec =  '" . $user->name . "'");
+ 
+  //If user has a payment due display links
+  if ($if_payment_due[0]['NOPAIDAPP'] > 0) {
+    //Instructions
+    $title = t('<strong>Please click on the appropriate application fee to pay: </strong>');
+    
+    //Start list
+    $links = '<ul>';
+    
+    //Create list
+    if (!empty($settings)){
+      foreach ($settings AS $index => $values) {
+       //Create links
+        $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/ ' . $index) . '</li>';
+      }
     }
+    
+    //Close list
+    $links .= '</ul>';
+    return  $title . $links;
+  }//If user does not have a payment due display a message.
+  else {
+    return '<p>'. t('It appears you have already paid your application fee, if you have any question please contact your enrollment advisor.') .'<p>';
   }
-  
-  //Testing
-  $links .= '</ul>';
-  return  $links;
   
 }
