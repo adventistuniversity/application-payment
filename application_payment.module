@@ -26,7 +26,7 @@ function application_payment_menu() {
     'title' => 'Applicant Payment',
     'page callback' => 'application_payment_page',
     'access arguments' => array('access applicants payment page'),
-    'page arguments' => array(1),
+    'page arguments' => array(2),
   );
   
   //Create url or menu item to have a list of payment options.
