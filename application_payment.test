@@ -9,7 +9,7 @@
  * expected.
  *
  */
-class ApplicationPaymentTestCase extends DrupalWebTestCase {
+class ApplicationPaymentTestCase extends DrupalWebTestCase  {
   protected $web_user;
 
   public static function getInfo() {
@@ -132,11 +132,85 @@ class ApplicationPaymentTestCase extends DrupalWebTestCase {
    // Verify that user can access foo content
    $this->drupalGet('pay/application/undergraduate');
    $this->assertResponse(200, t('Application payment page content fail accessed.'));
+  }
+  
+  function testApplicationPaymentAPIUsage() {
+   //Test Case 4.1 application_payment.xlsx Test application Payment tab
    
-   //Test Case 1.3 application_payment.xlsx Application Payment tab
-   
-   
-   
+   $this->web_user = $this->drupalCreateUser(array('access applicants payment page'));
+   $this->drupalLogin($this->web_user);
 
+   // Verify that user can access foo content
+   $this->drupalGet('pay/application/undergraduate');
+   $this->assertResponse(200, t('Application payment page content fail accessed.'));
+   
+   $this->assertText(t('It appears you have already paid your application fee, if you have any question please contact your enrollment advisor.'));
+   
+   //Looking deeper into integration
+  
+   //Creating a user that needs a payment
+   $user_name = sonisweb_integration_sql("SELECT TOP 1 soc_sec FROM nmappchk AS nm INNER JOIN appchk AS app ON app.appchk_cod = nm.appchk_cod
+    WHERE nm.chk_comp = 0 AND app.disabled = 0 AND app.appchk_txt LIKE '%app%fee%'");
+   
+   //Check if the API return a user set
+   if(empty($user_name)) {
+     $this->assertTrue(FALSE, 'Unable to retrive user name with no application payment from SONIS API');
+   }
+   else {
+    //Getting user with little 
+    $name = $user_name[0]['SOC_SEC']; 
+   
+    //Create the role   
+    if (!$rid = $this->drupalCreateRole(array('access applicants payment page'))) {
+     $this->assertTrue(FALSE,'Unable to create user role');
+    }
+     
+    // Create a user assigned to that role.
+    $edit = array();
+    $edit['name']   = $name;
+    $edit['mail']   = $name . '@example.com';
+    $edit['roles']  = array($rid => $rid);
+    $edit['pass']   = user_password();
+    $edit['status'] = 1;
+    
+    //Load user
+    $account = user_load(array('name' => $name));
+    
+    //If the user is loaded set to true else set false
+    $is_user_loaded = (is_object($account))?TRUE:FALSE;
+    
+    //If user is loaded create set a message user has been loadeds
+    if($is_user_loaded) {
+     //User has been loaded
+     $this->assertTrue( $is_user_loaded, "User has been loaded");
+    }
+    else {
+     //If user not loaded create a new user
+     $account = user_save(drupal_anonymous_user(), $edit);
+     //If urer is created assert true
+     $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
+     
+    }
+ 
+    //Set raw pass to log use in
+    $account->pass_raw = $edit['pass'];
+  
+    //Login user
+    $this->drupalLogin($account);
+     
+    // Verify that user can access foo content
+    $this->drupalGet('pay/application');
+    $this->assertResponse(200, t('Application payment page content fail accessed.'));
+    
+    //Get application payments
+    $application_payments = variable_get('application_payment_settings', array());
+    
+    //Check if user gets the option to make a payment   
+    $this->assertText(t('Pay my undergraduate application fee'));
+    
+   
+   }
+   
+ 
   }
 }
