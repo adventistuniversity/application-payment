@@ -317,7 +317,7 @@ function application_payment_page($payment_type)  {
  }
  else {
   
-  return '<p>'. t('It appears you have already paid your application fee, if you have any question please contact your enrollment advisor.') .'<p>';
+  return '<p>'. t('It appears you have already paid your application fee. If you have any questions, please contact your Enrollment Specialist.') .'<p>';
  }
 }
 
@@ -361,7 +361,7 @@ function application_payment_options_page() {
     return  $title . $links;
   }//If user does not have a payment due display a message.
   else {
-    return '<p>'. t('It appears you have already paid your application fee, if you have any question please contact your enrollment advisor.') .'<p>';
+    return '<p>'. t('It appears you have already paid your application fee. If you have any questions, please contact your Enrollment Specialist.') .'<p>';
   }
   
 }
