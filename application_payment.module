@@ -281,7 +281,7 @@ function application_payment_page($payment_type)  {
   
   //Get current Drupal user
   global $user;
-
+  
   //get the application feed settings
   $settings = variable_get('application_payment_settings', array());
   
@@ -307,6 +307,7 @@ function application_payment_page($payment_type)  {
                                                      array('account', $user->name),
                                                      array('pmt_type', $settings[$payment_type]['t_code']),
                                                      array('pmt_type_desc', "Payment of application fee, done online."),
+                                                     array('edit_indicator', "N"), 
                                                      array('amount_paid', $settings[$payment_type]['amount']),
                                                      array('submit', 'Make Payment'),
                                                      ));
@@ -352,7 +353,7 @@ function application_payment_options_page() {
     if (!empty($settings)){
       foreach ($settings AS $index => $values) {
        //Create links
-        $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/ ' . $index) . '</li>';
+        $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/' . $index) . '</li>';
       }
     }
     
