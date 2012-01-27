@@ -142,7 +142,7 @@ function application_payment_settings(&$form_state, $action = 'none', $type = 'n
     //create table rows
     $rows = array();
     foreach ($settings AS $index => $values) {
-     $rows[$index] = array('name' => l($index, 'pay/application/' . $index),
+     $rows[$index] = array('name' => l($index, 'pay/application/' . $index).($values['t_code'] != 'AP'?" (Hidden)":""),
                            't-code' => $values['t_code'],
                            'amount' => '$' . $values['amount'],
                            'update' => l(t('Update'),
@@ -301,7 +301,7 @@ function application_payment_page($payment_type)  {
     WHERE nm.chk_comp = 0 AND app.disabled = 0 AND app.appchk_txt LIKE '%app%fee%' AND nm.soc_sec =  '" . $user->name . "'");
  
  
-  if ($if_payment_due[0]['NOPAIDAPP'] > 0) {
+  if ($if_payment_due[0]['NOPAIDAPP'] > 0 || $settings[$payment_type]['t_code'] != "AP") {
    //create form for payment
    $display = sonisweb_integration_api('CFC.sallie_mae', 'sso', 'yes', array(array('sonis_ds', '#sonis.ds#'),
                                                      array('account', $user->name),
@@ -352,8 +352,10 @@ function application_payment_options_page() {
     //Create list
     if (!empty($settings)){
       foreach ($settings AS $index => $values) {
-       //Create links
-        $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/' . $index) . '</li>';
+        if ($values['t_code'] == "AP") {
+          //Create links
+          $links .= '<li>' . l('Pay my '. $index .' application fee', 'pay/application/' . $index) . '</li>';
+        }
       }
     }
     
