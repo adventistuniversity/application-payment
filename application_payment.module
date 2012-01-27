@@ -306,7 +306,7 @@ function application_payment_page($payment_type)  {
    $display = sonisweb_integration_api('CFC.sallie_mae', 'sso', 'yes', array(array('sonis_ds', '#sonis.ds#'),
                                                      array('account', $user->name),
                                                      array('pmt_type', $settings[$payment_type]['t_code']),
-                                                     array('pmt_type_desc', "Payment of application fee, done online."),
+                                                     array('pmt_type_desc', "Payment of ".($settings[$payment_type]['t_code'] != "AP"?$payment_type:"application")." fee, done online."),
                                                      array('edit_indicator', "N"), 
                                                      array('amount_paid', $settings[$payment_type]['amount']),
                                                      array('submit', 'Make Payment'),
